@@ -1,53 +1,41 @@
 package com.hemebiotech.analytics;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
+/**
+ * New version of AnalyticsCounter
+ * Count symptoms and sort them alphabetically
+ */
 public class AnalyticsCounter {
-
-	public static void main(String[] args) throws Exception {
-		// initialize each symptom counter
-		int headacheCount = 0;
-		int rashCount = 0;
-		int pupilCount = 0;
-
-		List<String> symptomList = new ArrayList<>();
-		Map<String, Integer> symptomMap = new HashMap<>();
-
-		// read first symptom
-		BufferedReader reader = new BufferedReader (new FileReader("symptoms.txt"));
-		String line = reader.readLine();
-
-		// read symptoms until end of file
-		while (line != null) {
-//            System.out.println("symptom from file: " + line);
-			symptomList.add(line);
-			line = reader.readLine();	// get next symptom
+	/**
+	 * Read symptoms from file, count and sort symptoms alphabetically, and write results to file
+	 * @param symptomFilename input file containing one symptom per line
+	 * @param resultFilename output file containing the symptom tally ordered alphabetically
+	 */
+	public static void analyticsCount(String symptomFilename, String resultFilename) {
+		List<String> symptomList;
+		Map<String, Integer> symptomMap;
+		// Read symptoms into a list, clean data and convert to lowercase
+		ISymptomReader reader = new SymptomReader(symptomFilename);
+		symptomList = reader.getSymptoms();
+		if (symptomList.isEmpty())
+			System.out.println("No symptoms found");
+		else {
+			// Count symptoms, sort them alphabetically and write to file
+			symptomMap = SymptomUtils.countSymptoms(symptomList);
+			symptomMap = SymptomUtils.sortSymptoms(symptomMap);
+			ISymptomWriter writer = new SymptomWriter(resultFilename);
+			writer.putSymptoms(symptomMap);
 		}
 
-		// count symptoms
-		for (String symptom : symptomList) {
-			Integer value = symptomMap.get(symptom);
-			if (value == null)
-				symptomMap.put(symptom, 1);
-			else
-				symptomMap.put(symptom, value+1);
-		}
+	}
+	/**
+	 *
+	 * @param  args - default unused parameter
+	 */
+	public static void main(String[] args) {
 
-		// Copy the Map into a TreeMap to sort it
-		TreeMap<String, Integer> mySortedMap = new TreeMap<>(symptomMap);
-
-		// write symptom tally
-		FileWriter writer = new FileWriter ("result.out");
-		mySortedMap.entrySet().forEach(entry -> {
-			try {
-				writer.write(entry.getKey() + " : " + entry.getValue() + "\n");
-			} catch(IOException e) {e.printStackTrace();}
-		});
-		writer.close();
-
+		analyticsCount("symptoms.txt", "result.out");
 	}
 }
